@@ -10,20 +10,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const __dirname = path.resolve();
+// === __dirname (ESM uchun TO‘G‘RI) ===
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// 🔹 Frontend build serve qilish
-app.use(express.static(path.join(__dirname, "dist")));
+// === FRONTEND (Vite build) SERVE ===
+// Vite build → dist/public
+app.use(express.static(path.join(__dirname, "../dist/public")));
 
-// 🔹 OpenAI
+// === OpenAI ===
 const client = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
 });
 
-// 🔹 File upload
+// === File upload ===
 const upload = multer({ dest: "uploads/" });
 
-// 🔹 API: matn tahlil
+// === API: Matn tahlil ===
 app.post("/api/analyze", upload.single("file"), async (req, res) => {
   try {
     let text = "";
@@ -61,23 +64,13 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
   }
 });
 
-// 🔹 SPA fallback
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist/index.html"));
-});
-
-// 🔹 PORT (Render uchun MUHIM)
-const PORT = process.env.PORT || 3000;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Vite build qilingan frontendni serve qilish
-app.use(express.static(path.join(__dirname, "../dist/public")));
-
+// === SPA fallback (ENG OXIRIDA) ===
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../dist/public/index.html"));
 });
 
+// === PORT (Render uchun MUHIM) ===
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server ishga tushdi:", PORT);
 });
