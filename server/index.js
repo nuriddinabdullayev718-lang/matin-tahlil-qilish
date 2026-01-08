@@ -4,6 +4,7 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 import OpenAI from "openai";
+import { fileURLToPath } from "url";
 
 const app = express();
 app.use(cors());
@@ -67,6 +68,16 @@ app.get("*", (req, res) => {
 
 // 🔹 PORT (Render uchun MUHIM)
 const PORT = process.env.PORT || 3000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Vite build qilingan frontendni serve qilish
+app.use(express.static(path.join(__dirname, "../dist/public")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../dist/public/index.html"));
+});
+
 app.listen(PORT, () => {
   console.log("Server ishga tushdi:", PORT);
 });
