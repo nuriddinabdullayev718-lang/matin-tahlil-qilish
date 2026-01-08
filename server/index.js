@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 
 // === FRONTEND (Vite build) SERVE ===
 // Vite build → dist/public
-app.use(express.static(path.join(__dirname, "../dist/public")));
+
 
 // === OpenAI ===
 const client = new OpenAI({
@@ -64,13 +64,10 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
   }
 });
 
-// === SPA fallback (ENG OXIRIDA) ===
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../dist/public/index.html"));
-});
+
 
 // === PORT (Render uchun MUHIM) ===
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log("Server ishga tushdi:", PORT);
 });
