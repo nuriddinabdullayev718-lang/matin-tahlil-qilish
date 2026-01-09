@@ -2,56 +2,52 @@ import express from "express";
 import cors from "cors";
 import multer from "multer";
 import fs from "fs";
-import mammoth from "mammoth";
-import OpenAI from "openai";
 import path from "path";
+import OpenAI from "openai";
+import mammoth from "mammoth";
 import { fileURLToPath } from "url";
+
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
-const app = express();
-app.use(cors());
-// 🔥 FRONTEND STATIC FILES
+// FRONTEND
 app.use(express.static(path.join(__dirname, "../public")));
 
-app.use(express.json());
+// FILE UPLOAD
+const upload = multer({ dest: "uploads/" });
 
-const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB
-
+// OPENAI
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// API
 app.post("/api/analyze", upload.single("file"), async (req, res) => {
   try {
     let text = "";
 
-    // ✅ DOCX
-    if (req.file && req.file.originalname.endsWith(".docx")) {
-      const result = await mammoth.extractRawText({
-        buffer: fs.readFileSync(req.file.path),
-      });
-      text = result.value;
-    }
-
-    // ✅ TXT
-    else if (req.file && req.file.originalname.endsWith(".txt")) {
-      text = fs.readFileSync(req.file.path, "utf-8");
-    }
-
-    // ✅ TEXTAREA
-    else if (req.body.text) {
+    if (req.file) {
+      if (req.file.originalname.endsWith(".docx")) {
+        const result = await mammoth.extractRawText({ path: req.file.path });
+        text = result.value;
+      } else {
+        text = fs.readFileSync(req.file.path, "utf-8");
+      }
+      fs.unlinkSync(req.file.path);
+    } else {
       text = req.body.text;
     }
 
-    if (!text || text.length < 5) {
+    if (!text || text.length < 3) {
       return res.status(400).json({ error: "Matn topilmadi" });
     }
 
-    // 🔥 TOKENNI CHEKLASH
-    text = text.slice(0, 8000);
+    // LIMIT → TOKEN MUAMMOSIZ
+    text = text.slice(0, 12000);
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
@@ -75,12 +71,12 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log("Server ishga tushdi:", PORT);
-});
-// 🔥 ROOT ROUTE
+// ROOT
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log("Server ishga tushdi:", PORT);
+});
