@@ -28,44 +28,27 @@ const upload = multer({
 // ===== API =====
 app.post("/api/analyze", upload.single("file"), async (req, res) => {
   try {
-    let text = "";
-
-    if (req.file) {
-      const ext = path.extname(req.file.originalname).toLowerCase();
-
-      if (ext === ".txt") {
-        text = fs.readFileSync(req.file.path, "utf-8");
-      } else if (ext === ".docx") {
-        const result = await mammoth.extractRawText({
-          path: req.file.path,
-        });
-        text = result.value;
-      }
-
-      fs.unlinkSync(req.file.path);
-    } else if (req.body.text) {
-      text = req.body.text;
+    if (!req.file) {
+      return res.status(400).json({ error: "Fayl kelmadi" });
     }
 
-    if (!text || text.length < 5) {
-      return res.status(400).json({ error: "Matn topilmadi" });
-    }
+    const text = req.file.buffer.toString("utf-8");
 
-    // TOKENNI KAMAYTIRISH (MUHIM)
-    text = text.slice(0, 8000);
+    // vaqtinchalik TEST uchun (AI ishlamasa ham frontend to‘lsin)
+    const correctedHtml = text
+      .replace(/olinmadi/g, "<del>olinmadi</del> <ins>olindi</ins>")
+      .replace(/bajarildi/g, "<ins>bajarildi</ins>");
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Sen o‘zbek tilidagi imlo va grammatika xatolarini topib, to‘g‘rilangan variantni qaytarasan. Xato so‘zlarni [] ichiga ol, to‘g‘ri variantni () ichida ber.",
-        },
-        { role: "user", content: text },
-      ],
-      max_tokens: 2000,
+    res.json({
+      originalText: text,
+      correctedHtml: correctedHtml
     });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
 
     res.json({
       original: text,
