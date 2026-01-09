@@ -10,21 +10,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ESM uchun __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 🔹 FRONTEND (public papka)
+// 🔹 PUBLIC papkani serve qilish
 app.use(express.static(path.join(__dirname, "../public")));
 
 // 🔹 OpenAI
 const client = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // 🔹 File upload
 const upload = multer({ dest: "uploads/" });
 
-// 🔹 API: Matn tahlil qilish
+// 🔹 API: matn tahlil
 app.post("/api/analyze", upload.single("file"), async (req, res) => {
   try {
     let text = "";
@@ -46,7 +47,7 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
         {
           role: "system",
           content:
-            "Siz imlo va grammatik xatolarni aniqlovchi tizimsiz. Xatolarni to‘g‘rilangan variant bilan qaytaring.",
+            "Siz imlo va grammatik xatolarni aniqlovchi tahlilchisiz. Xatolarni to‘g‘rilangan variant bilan qaytaring.",
         },
         { role: "user", content: text },
       ],
@@ -62,7 +63,7 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
   }
 });
 
-// 🔹 SPA fallback
+// 🔹 SPA fallback (ENG MUHIM)
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
