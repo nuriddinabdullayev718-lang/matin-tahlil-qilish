@@ -4,42 +4,59 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 import OpenAI from "openai";
+import mammoth from "mammoth";
 import { fileURLToPath } from "url";
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 
-// === __dirname (ESM uchun TO‘G‘RI) ===
+// __dirname (ESM)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// === FRONTEND (Vite build) SERVE ===
-// MUHIM: dist papka rootda
-app.use(express.static(path.join(__dirname, "../dist")));
+// Static frontend: /public
+const PUBLIC_DIR = path.join(__dirname, "..", "public");
+app.use(express.static(PUBLIC_DIR));
 
-// === OpenAI ===
+// OpenAI
 const client = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
 });
 
-// === File upload ===
-const upload = multer({ dest: "uploads/" });
+// Upload
+const upload = multer({ dest: path.join(__dirname, "..", "uploads") });
 
-// === API: Matn tahlil ===
+// Fayldan matn olish (txt/docx)
+async function extractTextFromFile(file) {
+  const ext = (path.extname(file.originalname || "").toLowerCase() || "").trim();
+
+  if (ext === ".txt") {
+    return fs.readFileSync(file.path, "utf-8");
+  }
+
+  if (ext === ".docx") {
+    const result = await mammoth.extractRawText({ path: file.path });
+    return (result.value || "").trim();
+  }
+
+  return "";
+}
+
+// API
 app.post("/api/analyze", upload.single("file"), async (req, res) => {
   try {
     let text = "";
 
     if (req.file) {
-      text = fs.readFileSync(req.file.path, "utf-8");
+      text = await extractTextFromFile(req.file);
       fs.unlinkSync(req.file.path);
-    } else if (req.body.text) {
-      text = req.body.text;
+    } else if (req.body?.text) {
+      text = String(req.body.text);
     }
 
-    if (!text) {
-      return res.status(400).json({ error: "Matn topilmadi" });
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: "Matn topilmadi (fayl TXT/DOCX bo‘lsin)" });
     }
 
     const completion = await client.chat.completions.create({
@@ -48,7 +65,7 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
         {
           role: "system",
           content:
-            "Siz imlo va grammatik xatolarni aniqlovchi tahlilchisiz. Xatolarni to‘g‘rilangan variant bilan qaytaring.",
+            "Siz imlo va grammatik xatolarni aniqlovchi tahlilchisiz. Matnni to‘g‘rilab, faqat to‘g‘rilangan matnni qaytaring.",
         },
         { role: "user", content: text },
       ],
@@ -56,7 +73,7 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
 
     res.json({
       original: text,
-      corrected: completion.choices[0].message.content,
+      corrected: completion.choices?.[0]?.message?.content || "",
     });
   } catch (err) {
     console.error(err);
@@ -64,13 +81,10 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
   }
 });
 
-// === SPA fallback (ENG MUHIM QATOR) ===
+// SPA fallback: hamma yo‘lni index.html ga qaytaradi
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../dist/index.html"));
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-// === PORT ===
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log("Server ishga tushdi:", PORT);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server ishga tushdi:", PORT));
