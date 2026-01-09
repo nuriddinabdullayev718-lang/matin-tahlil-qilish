@@ -1,39 +1,139 @@
 <!DOCTYPE html>
 <html lang="uz">
-<head>
-  <meta charset="UTF-8" />
-  <title>Matn tahlil qilish tizimi</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matn Tahlili</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="container topbar__inner">
+        <div class="brand">
+          <div class="brand__icon">📄</div>
+          <div class="brand__text">
+            <div class="brand__title">Matn Tahlili</div>
+            <div class="brand__sub">Imlo va grammatik tekshiruv</div>
+          </div>
+        </div>
 
-<h1>Matn tahlil qilish tizimi</h1>
-<p>Imlo va grammatik xatolarni tekshirish</p>
+        <nav class="nav">
+          <a class="nav__link" href="#about">Haqida</a>
+          <button id="btnNew" class="btn btn--dark">Yangi Tahlil</button>
+        </nav>
+      </div>
+    </header>
 
-<hr>
+    <main class="container">
+      <!-- Hero -->
+      <section class="hero" id="home">
+        <div class="badge">
+          <span class="dot"></span>
+          Tezkor va samarali
+        </div>
 
-<h3>Fayl yuklash</h3>
-<input type="file" id="fileInput" accept=".txt,.docx" />
+        <h1 class="hero__title">
+          Matnni tahlil qiling va <span class="hero__accent">xatolarni to‘g‘rilang</span>
+        </h1>
 
-<h3>Yoki matn kiriting</h3>
-<textarea id="textInput" rows="8" cols="80"></textarea><br><br>
+        <p class="hero__desc">
+          Imloviy va grammatik xatolarni toping. O‘zbek va boshqa tillardagi matnlaringizni
+          mukammallashtiring.
+        </p>
+      </section>
 
-<button onclick="analyze()">Tahlil qilish</button>
+      <!-- Upload Card -->
+      <section class="card" id="uploader">
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone__icon">☁️⬆️</div>
+          <div class="dropzone__title">Faylni bu yerga tashlang</div>
+          <div class="dropzone__sub">Yoki kompyuteringizdan tanlash uchun bosing.</div>
 
-<hr>
+          <div class="dropzone__chips">
+            <span class="chip">DOCX</span>
+            <span class="chip">TXT</span>
+            <span class="chip chip--soft">Maks: 10MB</span>
+          </div>
 
-<div style="display:flex; gap:30px;">
-  <div style="width:50%;">
-    <h3>Asl matn</h3>
-    <pre id="original"></pre>
-  </div>
+          <input id="fileInput" type="file" accept=".docx,.txt" hidden />
+        </div>
 
-  <div style="width:50%;">
-    <h3>To‘g‘rilangan matn</h3>
-    <pre id="corrected"></pre>
-  </div>
-</div>
+        <div class="or">yoki</div>
 
-<script src="app.js"></script>
-</body>
+        <label class="textareaLabel" for="textInput">Matnni shu yerga yozib ham tahlil qilishingiz mumkin:</label>
+        <textarea
+          id="textInput"
+          class="textarea"
+          placeholder="Matnni shu yerga yozing..."
+          rows="7"
+        ></textarea>
+
+        <div class="actions">
+          <div class="fileinfo" id="fileInfo">Tanlangan fayl: yo‘q</div>
+          <button id="btnAnalyze" class="btn btn--primary">
+            <span id="btnAnalyzeText">Tahlil qilish</span>
+            <span id="btnAnalyzeSpinner" class="spinner hidden"></span>
+          </button>
+        </div>
+
+        <div class="note">
+          <span class="note__icon">⚠️</span>
+          Eslatma: Katta hajmdagi fayllarni tahlil qilish biroz vaqt olishi mumkin. Maksimal fayl hajmi 10MB.
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section class="results hidden" id="results">
+        <div class="results__top">
+          <div class="results__title">
+            <h2>Tahlil Natijasi</h2>
+            <span class="pill" id="statusPill">Yuklanmoqda...</span>
+          </div>
+
+          <div class="results__buttons">
+            <button id="btnRefresh" class="btn btn--ghost">Yangilash</button>
+            <button id="btnDownload" class="btn btn--primary">Yuklab olish</button>
+          </div>
+        </div>
+
+        <div class="panes">
+          <div class="pane">
+            <div class="pane__head">
+              <div class="pane__title">Asl Matn</div>
+              <div class="pane__meta">
+                <span class="pill pill--soft" id="origMode">O‘zgartirishsiz</span>
+              </div>
+            </div>
+            <div class="pane__body" id="originalBox"></div>
+          </div>
+
+          <div class="pane pane--accent">
+            <div class="pane__head">
+              <div class="pane__title">To‘g‘rilangan Matn</div>
+              <div class="pane__meta">
+                <span class="pill pill--soft">Xatolar belgilandi</span>
+              </div>
+            </div>
+            <div class="pane__body" id="correctedBox"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- About -->
+      <section class="about" id="about">
+        <h3>Haqida</h3>
+        <p>
+          Ushbu tizim DOCX/TXT fayllar yoki qo‘lda kiritilgan matnni tahlil qiladi va imlo/grammatika
+          xatolarini to‘g‘rilangan variant bilan qaytaradi. Natijada “Asl matn” va “To‘g‘rilangan matn”
+          yonma-yon ko‘rsatiladi.
+        </p>
+      </section>
+    </main>
+
+    <!-- Toast -->
+    <div class="toast hidden" id="toast"></div>
+
+    <script src="./app.js"></script>
+  </body>
 </html>
