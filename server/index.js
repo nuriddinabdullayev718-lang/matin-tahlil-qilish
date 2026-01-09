@@ -1,26 +1,23 @@
 import express from "express";
 import cors from "cors";
 import multer from "multer";
-import fs from "fs";
-import path from "path";
 import mammoth from "mammoth";
 import OpenAI from "openai";
+import path from "path";
 import { fileURLToPath } from "url";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ===== PATH =====
+// ===== FRONTEND =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// ===== FRONTEND =====
 app.use(express.static(path.join(__dirname, "../public")));
 
-// ===== FILE UPLOAD =====
+// ===== MULTER (XOTIRADA!) =====
 const upload = multer({
-  dest: "uploads/",
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
 });
 
@@ -34,26 +31,20 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
   try {
     let text = "";
 
-    // === FILE ===
     if (req.file) {
-      const ext = path.extname(req.file.originalname).toLowerCase();
+      const name = req.file.originalname.toLowerCase();
 
-      if (ext === ".docx") {
+      if (name.endsWith(".docx")) {
         const result = await mammoth.extractRawText({
-          path: req.file.path,
+          buffer: req.file.buffer, // MUHIM
         });
         text = result.value;
-      } else if (ext === ".txt") {
-        text = fs.readFileSync(req.file.path, "utf-8");
+      } else if (name.endsWith(".txt")) {
+        text = req.file.buffer.toString("utf-8");
       } else {
         return res.status(400).json({ error: "Faqat DOCX yoki TXT" });
       }
-
-      fs.unlinkSync(req.file.path);
-    }
-
-    // === TEXTAREA ===
-    else if (req.body.text) {
+    } else if (req.body.text) {
       text = req.body.text;
     }
 
@@ -61,7 +52,7 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "Matn topilmadi" });
     }
 
-    // 🔥 TOKENNI CHEKLASH (100% MUAMMOSIZ)
+    // token muammosiz
     text = text.slice(0, 8000);
 
     const completion = await openai.chat.completions.create({
@@ -70,7 +61,7 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
         {
           role: "system",
           content:
-            "Matndagi imlo va grammatik xatolarni top. To‘g‘rilangan matnni qaytar.",
+            "Matndagi imlo va grammatik xatolarni aniqlab, to‘g‘rilangan variantni qaytar.",
         },
         { role: "user", content: text },
       ],
@@ -80,8 +71,8 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
       original: text,
       corrected: completion.choices[0].message.content,
     });
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.error(e);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
@@ -91,7 +82,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
-// ===== START =====
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log("Server ishga tushdi:", PORT);
