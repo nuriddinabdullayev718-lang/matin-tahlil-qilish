@@ -4,9 +4,18 @@ import multer from "multer";
 import fs from "fs";
 import mammoth from "mammoth";
 import OpenAI from "openai";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 const app = express();
 app.use(cors());
+// 🔥 FRONTEND STATIC FILES
+app.use(express.static(path.join(__dirname, "../public")));
+
 app.use(express.json());
 
 const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB
@@ -70,3 +79,8 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log("Server ishga tushdi:", PORT);
 });
+// 🔥 ROOT ROUTE
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
+});
+
