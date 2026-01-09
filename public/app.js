@@ -1,49 +1,44 @@
-const analyzeBtn = document.getElementById("analyzeBtn");
 const fileInput = document.getElementById("fileInput");
-const originalBox = document.getElementById("originalText");
-const correctedBox = document.getElementById("correctedText");
+const analyzeBtn = document.getElementById("analyzeBtn");
+const originalText = document.getElementById("originalText");
+const correctedText = document.getElementById("correctedText");
 const errorBox = document.getElementById("errorBox");
 
 analyzeBtn.addEventListener("click", async () => {
-  errorBox.innerText = "";
-  originalBox.innerText = "";
-  correctedBox.innerHTML = "";
+  errorBox.textContent = "";
+  originalText.textContent = "";
+  correctedText.innerHTML = "";
 
-  if (!fileInput.files.length) {
-    errorBox.innerText = "❌ Fayl tanlanmagan";
+  const file = fileInput.files[0];
+
+  if (!file) {
+    errorBox.textContent = "❌ Iltimos, hujjat tanlang (DOCX yoki TXT)";
     return;
   }
 
   const formData = new FormData();
-  formData.append("file", fileInput.files[0]);
+  // ❗ MUHIM: backend upload.single("file") kutyapti
+  formData.append("file", file);
 
   try {
-    const res = await fetch("/api/analyze", {
+    const response = await fetch("/api/analyze", {
       method: "POST",
       body: formData,
     });
 
-    if (!res.ok) {
-      const txt = await res.text();
+    if (!response.ok) {
+      const txt = await response.text();
       throw new Error(txt);
     }
 
-    const data = await res.json();
+    const data = await response.json();
 
-    // ⛔ agar server bo‘sh javob qaytarsa
-    if (!data || !data.original || !data.corrected) {
-      throw new Error("Serverdan noto‘g‘ri javob keldi");
-    }
-
-    // ✅ Asl matn
-    originalBox.innerText = data.original;
-
-    // ✅ To‘g‘rilangan matn (HTML bilan)
-    correctedBox.innerHTML = data.corrected;
+    // ❗ backend qaytargan nomlar
+    originalText.textContent = data.originalText;
+    correctedText.innerHTML = data.correctedHtml;
 
   } catch (err) {
     console.error(err);
-    errorBox.innerText =
-      "❌ Server xatosi. Matn tahlil qilinmadi.\n" + err.message;
+    errorBox.textContent = "❌ Server xatosi: " + err.message;
   }
 });
