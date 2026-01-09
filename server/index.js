@@ -30,6 +30,7 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
   try {
     let text = "";
 
+    // 📄 Fayl o‘qish
     if (req.file) {
       text = fs.readFileSync(req.file.path, "utf-8");
       fs.unlinkSync(req.file.path);
@@ -37,39 +38,52 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
       text = req.body.text;
     }
 
-    if (!text) {
+    if (!text || text.trim().length === 0) {
       return res.status(400).json({ error: "Matn topilmadi" });
     }
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Siz imlo va grammatik xatolarni aniqlovchi tahlilchisiz. Xatolarni to‘g‘rilangan variant bilan qaytaring.",
-        },
-        { role: "user", content: text },
-      ],
-    });
+    // 🔹 MATNNI BO‘LAKLARGA AJRATISH
+    const CHUNK_SIZE = 5000; // xavfsiz limit
+    const chunks = [];
 
+    for (let i = 0; i < text.length; i += CHUNK_SIZE) {
+      chunks.push(text.slice(i, i + CHUNK_SIZE));
+    }
+
+    let correctedText = "";
+
+    // 🔹 HAR BIR BO‘LAKNI AI GA YUBORAMIZ
+    for (let i = 0; i < chunks.length; i++) {
+      const completion = await client.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Siz imlo va grammatik xatolarni aniqlovchi tahlilchisiz. Matnni o‘zbek tilida to‘g‘rilab qaytaring.",
+          },
+          {
+            role: "user",
+            content: chunks[i],
+          },
+        ],
+        max_tokens: 2000,
+      });
+
+      correctedText += completion.choices[0].message.content + "\n";
+    }
+
+    // 🔹 YAKUNIY JAVOB
     res.json({
       original: text,
-      corrected: completion.choices[0].message.content,
+      corrected: correctedText,
+      chunks: chunks.length,
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server xatosi" });
+    res.status(500).json({
+      error: "Server xatosi",
+      details: err.message,
+    });
   }
-});
-
-// 🔹 SPA fallback (ENG MUHIM)
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
-});
-
-// 🔹 PORT
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log("Server ishga tushdi:", PORT);
 });
