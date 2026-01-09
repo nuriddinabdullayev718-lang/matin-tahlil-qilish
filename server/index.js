@@ -10,13 +10,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// === __dirname (ESM uchun to‘g‘ri) ===
+// === __dirname (ESM uchun TO‘G‘RI) ===
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // === FRONTEND (Vite build) SERVE ===
-// Vite build → dist/public
-
+// MUHIM: dist papka rootda
+app.use(express.static(path.join(__dirname, "../dist")));
 
 // === OpenAI ===
 const client = new OpenAI({
@@ -64,9 +64,12 @@ app.post("/api/analyze", upload.single("file"), async (req, res) => {
   }
 });
 
+// === SPA fallback (ENG MUHIM QATOR) ===
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../dist/index.html"));
+});
 
-
-// === PORT (Render uchun MUHIM) ===
+// === PORT ===
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log("Server ishga tushdi:", PORT);
