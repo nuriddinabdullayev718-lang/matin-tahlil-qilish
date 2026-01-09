@@ -1,36 +1,48 @@
 <!DOCTYPE html>
 <html lang="uz">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <title>Matn Tahlili - O'zbek Tili Imlo va Grammatika Tekshiruvi</title>
-    <meta name="description" content="O'zbek tilidagi matnlaringizni imlo va grammatik xatolardan tozalang. DOCX va TXT fayllarni tahlil qilish va samarali tuzatish xizmati." />
-    <meta name="keywords" content="matn tahlili, o'zbek tili, imlo tekshirish, grammatika, xato tuzatish, o'zbekcha tahrir" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://matntahlili.replit.app/" />
-    <meta property="og:title" content="Matn Tahlili - O'zbek Tili Imlo va Grammatika Tekshiruvi" />
-    <meta property="og:description" content="O'zbek tilidagi matnlaringizni imlo va grammatik xatolardan tozalang. Tezkor va samarali tahlil." />
-    <meta property="og:image" content="/favicon.png" />
+<head>
+  <meta charset="UTF-8" />
+  <title>Matn tahlil qilish tizimi</title>
+</head>
+<body style="font-family: Arial; max-width: 800px; margin: 40px auto;">
+  <h1>Matn tahlil qilish tizimi</h1>
+  <p>Ilova muvaffaqiyatli ishga tushdi ✅</p>
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://matntahlili.replit.app/" />
-    <meta property="twitter:title" content="Matn Tahlili - O'zbek Tili Imlo va Grammatika Tekshiruvi" />
-    <meta property="twitter:description" content="O'zbek tilidagi matnlaringizni imlo va grammatik xatolardan tozalang. Tezkor va samarali tahlil." />
-    <meta property="twitter:image" content="/favicon.png" />
+  <hr />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <h3>📄 Hujjat yuklash (TXT yoki DOCX)</h3>
+  <input type="file" id="fileInput" />
+  <br><br>
 
+  <h3>✍️ Yoki matn kiriting</h3>
+  <textarea id="textInput" rows="6" style="width:100%;"></textarea>
+  <br><br>
 
-  </body>
+  <button onclick="analyze()">🔍 Tahlil qilish</button>
+
+  <h3>📊 Natija</h3>
+  <pre id="result" style="background:#f4f4f4; padding:10px;"></pre>
+
+  <script>
+    async function analyze() {
+      const file = document.getElementById("fileInput").files[0];
+      const text = document.getElementById("textInput").value;
+      const result = document.getElementById("result");
+
+      const formData = new FormData();
+      if (file) formData.append("file", file);
+      else formData.append("text", text);
+
+      result.textContent = "⏳ Tahlil qilinmoqda...";
+
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      result.textContent = "ASL MATN:\n" + data.original + "\n\nTO‘G‘RILANGAN MATN:\n" + data.corrected;
+    }
+  </script>
+</body>
 </html>
