@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Matn tahlil qilish tizimi</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">📄</div>
+        <div>
+          <div class="brand-title">Matn Tahlili</div>
+          <div class="brand-sub">Imlo va grammatik tekshiruv</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-link" href="#about">Haqida</a>
+        <button id="newBtn" class="btn btn-primary">Yangi Tahlil</button>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <div class="pill">● Tezkor va samarali</div>
+        <h1 class="title">
+          Matnni tahlil qiling va
+          <span class="accent">xatolarni to‘g‘rilang</span>
+        </h1>
+        <p class="desc">
+          Imlo va grammatik xatolarni toping. O‘zbek va boshqa tillardagi matnlaringizni
+          mukammallashtiring.
+        </p>
+      </section>
+
+      <section class="card">
+        <div class="dropzone" id="dropzone">
+          <div class="drop-inner">
+            <div class="cloud">☁️⬆️</div>
+            <div class="drop-title">Faylni bu yerga tashlang</div>
+            <div class="drop-sub">Yoki kompyuteringizdan tanlash uchun bosing.</div>
+
+            <div class="file-actions">
+              <label class="chip">
+                DOCX
+                <input id="fileInput" type="file" accept=".docx,.txt" hidden />
+              </label>
+              <label class="chip">
+                TXT
+                <input id="fileInput2" type="file" accept=".txt,.docx" hidden />
+              </label>
+            </div>
+
+            <div class="or">yoki</div>
+
+            <div class="textarea-wrap">
+              <textarea
+                id="textInput"
+                placeholder="Matnni shu yerga yozib ham tahlil qilishingiz mumkin..."
+              ></textarea>
+            </div>
+
+            <div class="controls">
+              <div class="meta" id="fileMeta">Hech qanday fayl tanlanmadi</div>
+              <button id="analyzeBtn" class="btn btn-dark">Tahlil qilish</button>
+            </div>
+
+            <div class="note">
+              ⚠️ Eslatma: Katta hajmdagi fayllarni tahlil qilish biroz vaqt olishi mumkin.
+              Maksimal fayl hajmi 10MB.
+            </div>
+          </div>
+        </div>
+
+        <div class="toast" id="toast" aria-live="polite"></div>
+      </section>
+
+      <section class="result" id="resultSection" hidden>
+        <div class="result-head">
+          <h2>Natija</h2>
+          <div class="result-actions">
+            <button id="downloadBtn" class="btn btn-ghost">To‘g‘rilangan matnni yuklab olish</button>
+          </div>
+        </div>
+
+        <div class="panes">
+          <article class="pane">
+            <div class="pane-title">
+              <span>Asl Matn</span>
+              <span class="badge" id="origBadge">O‘zgartirishsiz</span>
+            </div>
+            <pre class="pane-body" id="originalOut"></pre>
+          </article>
+
+          <article class="pane pane-accent">
+            <div class="pane-title">
+              <span>To‘g‘rilangan Matn</span>
+              <span class="badge badge-ok" id="statusBadge">Tayyor</span>
+            </div>
+            <div class="pane-body rich" id="correctedOut"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="about" class="about">
+        <h3>Haqida</h3>
+        <p>
+          Ushbu web ilova matnni avtomatik tekshiradi va takomillashtirilgan variantni qaytaradi.
+          DOCX/TXT yuklab tahlil qilishingiz mumkin.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>© Matn tahlil qilish tizimi</span>
+    </footer>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
