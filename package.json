@@ -51,6 +51,7 @@
     "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",
     "cors": "^2.8.5",
+    "docx": "^8.5.0",
     "express-session": "^1.18.1",
     "framer-motion": "^11.18.2",
     "input-otp": "^1.4.2",
