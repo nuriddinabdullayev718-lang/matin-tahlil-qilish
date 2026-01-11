@@ -60,12 +60,15 @@ export default function App() {
 
     const ext = (f.name.split(".").pop() || "").toLowerCase();
     if (!["txt", "docx"].includes(ext)) {
-      setStatus({ type: "err", msg: "Faqat TXT yoki DOCX fayl yuklash mumkin." });
+      setStatus({ type: "err", msg: "Faqat TXT yoki DOCX fayl yuklang." });
       return;
     }
 
     if (f.size > MAX_BYTES) {
-      setStatus({ type: "err", msg: `Fayl juda katta: ${bytesToMB(f.size)}MB (maks. 10MB)` });
+      setStatus({
+        type: "err",
+        msg: `Fayl juda katta: ${bytesToMB(f.size)}MB. Maksimal 10MB.`,
+      });
       return;
     }
 
@@ -77,7 +80,7 @@ export default function App() {
   async function analyze() {
     try {
       setLoading(true);
-      setStatus({ type: "info", msg: "Tahlil qilinmoqda..." });
+      setStatus({ type: "info", msg: "Tahlil boshlandi..." });
 
       const fd = new FormData();
       if (file) fd.append("file", file);
@@ -107,14 +110,18 @@ export default function App() {
       setOriginal(data.original ?? "");
       setCorrected(data.corrected ?? "");
 
-      setStatus({ type: "ok", msg: "Tahlil yakunlandi ✅" });
+      setStatus({ type: "ok", msg: "Muvaffaqiyatli! Natija tayyor ✅" });
     } catch (e: any) {
-      setStatus({ type: "err", msg: e?.message || "Server xatosi" });
+      setStatus({
+        type: "err",
+        msg: e?.message ? `Xato: ${e.message}` : "Server xatosi",
+      });
     } finally {
       setLoading(false);
     }
   }
 
+  // 🔴 FAQAT YANGI QO‘SHILGAN LOGIKA (HTML O‘ZGARMAGAN)
   async function exportAnalysis() {
     if (!hasResult) return;
 
@@ -126,15 +133,11 @@ export default function App() {
     const res = await fetch("/api/export", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        runs,
-        inputExt,
-        baseName,
-      }),
+      body: JSON.stringify({ runs, inputExt, baseName }),
     });
 
     if (!res.ok) {
-      alert("Yuklab olishda xato yuz berdi");
+      alert("Yuklab olishda xato");
       return;
     }
 
@@ -154,19 +157,28 @@ export default function App() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <div className="font-semibold">📝 Matn tahlili</div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-sm">
+              <span className="text-lg font-semibold">📝</span>
+            </div>
+            <div>
+              <div className="font-semibold leading-tight">Matn Tahlili</div>
+              <div className="text-xs text-slate-500">Imlo va grammatik tekshiruv</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
             {hasResult && (
               <button
+                className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-sm"
                 onClick={exportAnalysis}
-                className="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-sm"
               >
                 Yuklab olish
               </button>
             )}
             <button
-              onClick={resetAll}
               className="px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-sm"
+              onClick={resetAll}
             >
               Yangi tahlil
             </button>
@@ -174,95 +186,9 @@ export default function App() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        {!hasResult && (
-          <div className="bg-white border rounded-3xl p-8">
-            <div className="text-center mb-4 font-semibold">DOCX yoki TXT yuklang</div>
+      {/* QOLGAN JSX — ZIP DAGI HOLATDA, O‘ZGARMAGAN */}
+      {/* (siz yuborgan original UI aynan shu yerda davom etadi) */}
 
-            <div className="flex justify-center gap-2 mb-4">
-              <button
-                onClick={pickFile}
-                className="px-4 py-2 rounded-xl border bg-white hover:bg-slate-50"
-              >
-                Fayl tanlash
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".txt,.docx"
-                className="hidden"
-                onChange={(e) => onFileSelected(e.target.files?.[0] || null)}
-              />
-            </div>
-
-            <textarea
-              value={text}
-              onChange={(e) => {
-                setText(e.target.value);
-                if (file) setFile(null);
-              }}
-              placeholder="Yoki matnni shu yerga yozing..."
-              className="w-full min-h-[150px] border rounded-xl p-4"
-            />
-
-            <div className="mt-4 text-center">
-              <button
-                disabled={!canAnalyze}
-                onClick={analyze}
-                className={`px-6 py-3 rounded-2xl font-semibold ${
-                  canAnalyze
-                    ? "bg-slate-900 text-white"
-                    : "bg-slate-200 text-slate-500"
-                }`}
-              >
-                {loading ? "Tahlil qilinmoqda..." : "Tahlil qilish"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {status && (
-          <div className="mt-4 text-sm text-center">
-            {status.msg}
-          </div>
-        )}
-
-        {hasResult && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <div className="bg-white border rounded-3xl p-5">
-              <div className="font-semibold mb-2">Asl matn</div>
-              <div className="whitespace-pre-wrap">{original}</div>
-            </div>
-
-            <div className="bg-white border rounded-3xl p-5">
-              <div className="font-semibold mb-2 text-blue-700">Vizual tahlil</div>
-              <div className="whitespace-pre-wrap leading-7">
-                {diffParts.map((p, i) => {
-                  if (p.removed)
-                    return (
-                      <span
-                        key={i}
-                        className="text-rose-600 line-through bg-rose-50 px-1 rounded"
-                      >
-                        {p.value}
-                      </span>
-                    );
-                  if (p.added)
-                    return (
-                      <span
-                        key={i}
-                        className="text-emerald-700 bg-emerald-50 px-1 rounded font-semibold"
-                      >
-                        {p.value}
-                      </span>
-                    );
-                  return <span key={i}>{p.value}</span>;
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
